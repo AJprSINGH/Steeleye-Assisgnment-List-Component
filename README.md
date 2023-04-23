@@ -1,70 +1,257 @@
-# Getting Started with Create React App
+# Steeleye Assignment Front-End
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### Q-1 Explain what the simple List component does.
+Ans. The following is a React component named "List" that allows users to select items from a list. It contains two sub-components: "WrappedSingleListItem" and "WrappedListComponent". The "WrappedSingleListItem" component is a memoized functional component that renders a single list item element with a background color based on its selection status. It takes four arguments: "index", "isSelected", "onClickHandler", and "text". The "WrappedListComponent" is also a memoized functional component that creates a list of items using the "WrappedSingleListItem" component. It takes an array of objects with "text" and "key" attributes as input. The component uses the "useState" and "useEffect" hooks to keep track of the currently selected item's index. The List component iterates over the array of items and creates a SingleListItem component for each one. It passes relevant props to the SingleListItem component to handle the display and behavior of each item. The List component also manages the state of the selected index using the useState hook, which allows it to keep track of the currently selected item in the list. When a user clicks on an item, the handleClick function updates the selected index based on the user's actions. As a result, the List component provides an interactive and dynamic list of selectable items for users to interact with on the website.
 
-## Available Scripts
+### Q-2 What problems / warnings are there with code?
+Ans.
+Error 1: The Invalid prop `isSelected` of type string supplied to `WrappedSingleListItem`, expected boolean" error occurs when assigning a string value to the `isSelected` prop, which has been set as a boolean in the propType, causing a type mismatch.
+```js
+const handleClick = (index) => {
+        console.log(index);
+        handleItemSelect(index);
+        setSelectedIndex === index ? selectedIndex(null) : selectedIndex(index);
+        console.log(setSelectedIndex);
+    };
+```
+Error 2: There was an error in declaring the `selectedIndex` variable. The issue was related to a missing dependency in the useEffect hook, specifically `setSelectedIndex`.
+```js
+const [setSelectedIndex, selectedIndex] = useState();
+```
 
-In the project directory, you can run:
+Error 3: The `map()` method was called without proper data being passed from the App component, resulting in the `selectedIndex` variable being set to null by default, which caused an error. To address this, a default prop can be set for the data to ensure that the `map()` method has valid data to work with.
+```js
+WrappedListComponent.propTypes = {
+items: PropTypes.arrayOf(
+PropTypes.shape({
+text: PropTypes.string.isRequired
+})
+)
+};
 
-### `npm start`
+WrappedListComponent.defaultProps = {
+items: [
+{
+text: "Attack On Titan",
+},
+{
+text: "Demon Slayer",
+},
+{
+text: "Death Note",
+},
+{
+text: "One Piece",
+},
+{
+text: "Naruto",
+},
+{
+text: "Jujutsu Kaisen",
+},
+{
+text: "My Hero Academia",
+},
+]
+};
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Error 4: The code has issues with PropTypes usage, specifically the incorrect use of `shapeOf` instead of `shape` to define the shape of an object prop. It is essential to use `shape` to ensure proper validation of PropTypes in the component.
+```js
+WrappedListComponent.propTypes = {
+    items: PropTypes.arrayOf(
+        PropTypes.shape({
+            text: PropTypes.string.isRequired
+        })
+    )
+};
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Error 5: The `onClickHandler` function is being invoked as a regular function, causing the rendered color to always be green as it takes the initial value of the passed index. To fix this issue, `onClickHandler` should be called as an arrow function to receive the updated index value.
+```js
+onClick={()=>onClickHandler(index)}
+```
 
-### `npm test`
+Error 6: When using React to map through an array and generate a list of elements, it's crucial to assign a unique `key` prop to each item. In the `WrappedListComponent`, adding a `key` prop to the `SingleListItem` component ensures proper rendering and optimization.
+```js
+<SingleListItem
+    key={index}        //added
+    text={item.text}    //added
+    index={index}
+    isSelected={setSelectedIndex === index}   //added
+    currBtn={currBtn}              //added
+    selectedItems={selectedItems}   //added
+    onClickHandler={() => handleClick(index)}
+/>
+```
+### Q-3 Please fix, optimize, and/or modify the component as much as you think is necessary.
+Ans. Fixed and optimized the code as per the above errors :
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```js
+import React, { useState, memo } from "react";
+import PropTypes from "prop-types";
+import "./List.css"
 
-### `npm run build`
+const WrappedSingleListItem = ({ index, isSelected, text, currBtn, onClickHandler, selectedItems }) => {
+    if (currBtn === 'single') {
+        return (
+            <>
+                <li
+                    style={{ backgroundColor: isSelected ? "orange" : "red", letterSpacing: '0.8', border: '2px solid black', listStyleType: 'none', margin: '5px', height: '35px', textAlign: 'center', fontWeight: 700, cursor: 'pointer' }}
+                    onClick={() => onClickHandler(index)} 
+                >
+                    {text}
+                </li>
+            </>
+        );
+    }
+    else if (currBtn === 'multiple') {
+        return (
+            <>
+                <li
+                    style={{ backgroundColor: selectedItems.includes(index) ? "green" : "red", letterSpacing: '0.8', border: '2px solid black', listStyleType: 'none', margin: '5px', height: '35px', textAlign: 'center', fontWeight: 700, cursor: 'pointer' }}
+                    onClick={() => onClickHandler(index)}
+                >
+                    {text}
+                </li>
+            </>
+        );
+    }
+    else {
+        return (
+            <>
+                <li
+                    style={{ backgroundColor: "red", letterSpacing: '0.8', border: '2px solid blue', margin: '5px', height: '35px', textAlign: 'center', listStyleType: 'none', fontWeight: 700, cursor: 'pointer' }}
+                    onClick={() => onClickHandler(index)}
+                >
+                    {text}
+                </li>
+            </>
+        );
+    }
+};
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+WrappedSingleListItem.propTypes = {
+    index: PropTypes.number,
+    isSelected: PropTypes.bool,
+    onClickHandler: PropTypes.func.isRequired,
+    selectedItems:PropTypes.array,
+    text: PropTypes.string.isRequired
+};
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+const SingleListItem = memo(WrappedSingleListItem);
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+const WrappedListComponent = ({ items }, props) => {
+    const [setSelectedIndex, selectedIndex] = useState();
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+    const [currBtn, setcurrBtn] = useState('single');
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## Learn More
+    const onClickSingle = () => {
+        setcurrBtn('single');
+        console.log("single");
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    }
+    const onClickMultiple = () => { 
+        setcurrBtn('multiple');
+        console.log("multiple");
+    }
+    const onClickClear = () => { 
+        setcurrBtn('clear');
+        setSelectedItems([]);
+        selectedIndex(null);
+        console.log(props);
+    }
 
-To learn React, check out the [React documentation](https://reactjs.org/).
 
-### Code Splitting
+    const [selectedItems, setSelectedItems] = useState([]);
+    const handleItemSelect = (itemId) => {
+        if (selectedItems.includes(itemId) && currBtn==='multiple') {
+            setSelectedItems(selectedItems.filter(id => id !== itemId));
+        } else if(currBtn==='multiple'){
+            setSelectedItems([...selectedItems, itemId]);
+        }
+    }
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+    const handleClick = (index) => {
+        console.log(index);
+        handleItemSelect(index);
+        setSelectedIndex === index ? selectedIndex(null) : selectedIndex(index);
+        console.log(setSelectedIndex);
+    };
 
-### Analyzing the Bundle Size
+    return (
+        <>
+        <div id='divmain'>
+        <ul style={{ textAlign: "left", marginTop: '40px',paddingRight:'35px'}}>
+            {items.map((item, index) => (
+                <SingleListItem
+                    key={index}        
+                    text={item.text}    
+                    index={index}
+                    isSelected={setSelectedIndex === index}   
+                    currBtn={currBtn}              
+                    selectedItems={selectedItems}       
+                    onClickHandler={() => handleClick(index)}
+                />
+            ))}
+        </ul>
+        <div className="container" style={{
+            margin: 'auto',
+            width: '20%',
+            marginRight: '1050px',
+            padding: '50px',
+            display: 'flex',
+            justifyContent: 'space-between'
+        }}>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+<button type="button" onClick={onClickSingle} id='singleBtn' style={currBtn==='single'?{border:'6px solid black'}:{border:'none'}} class="btn btn-success mx-2">Single</button>
+            <button type="button" onClick={onClickMultiple} style={currBtn==='multiple'?{border:'6px solid black'}:{border:'none'}} id='multiBtn'class="btn btn-danger mx-2">Multiple</button>
+            <button type="button" onClick={onClickClear} style={currBtn==='clear'?{border:'6px solid black'}:{border:'none'}} id='clearBtn'class="btn btn-warning mx-2">Clear</button>
+        </div>
+        </div>
+        </>
+    );
+};
 
-### Making a Progressive Web App
+WrappedListComponent.propTypes = {
+    items: PropTypes.arrayOf(
+        PropTypes.shape({
+            text: PropTypes.string.isRequired
+        })
+    )
+};
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+WrappedListComponent.defaultProps = {
+    items: [
+        {
+          text: "Attack On Titan",
+        },
+        {
+          text: "Demon Slayer",
+        },
+        {
+          text: "Death Note",
+        },
+        {
+          text: "One Piece",
+        },
+        {
+          text: "Naruto",
+        },
+        {
+          text: "Jujutsu Kaisen",
+        },
+        {
+          text: "My Hero Academia",
+        },
+      ]
+};
 
-### Advanced Configuration
+const List = memo(WrappedListComponent);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+export default List;
+```
